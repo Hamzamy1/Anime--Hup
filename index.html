@@ -864,6 +864,9 @@ let _inPopState = false;
 let _currentSrvIdx = 0;
 let _hls = null;
 let _isSeeking = false;
+let _fakeRetries = 0;
+let _fakeTimer = null;
+const MAX_FAKE_RETRIES = 5;
 
 window.addEventListener('scroll', () => {
   const y = window.scrollY;
@@ -1059,6 +1062,7 @@ function playEp(ep) {
   const n = ep || parseInt(epInp.value);
   if (!n || n<1) { toast('رقم صحيح'); return; }
   if (!slug) { toast('اختر أنمي'); return; }
+  _fakeRetries = 0;
   ldShow(); srvErr.classList.remove('show');
   let timedOut = false;
   const ft = setTimeout(() => { timedOut = true; toast('جلب الرابط يستغرق وقتاً، جرب تاني'); }, 15000);
@@ -1126,10 +1130,37 @@ function markSrv(idx) {
   btns.forEach((b, i) => b.classList.toggle('active', i === idx));
 }
 
+/* ── Fake/deleted video auto-detection ── */
+function autoNextSrv(reason) {
+  if (_fakeRetries >= MAX_FAKE_RETRIES) { toast('كل السيرفرات متعطلة'); closeP(); return; }
+  _fakeRetries++;
+  clearTimeout(timer); clearTimeout(_fakeTimer);
+  vid.pause(); vsrc.src = ''; vid.src = ''; vid.load();
+  toast(`⚠️ ${reason} — جرب سيرفر تاني...`, 'err');
+  setTimeout(() => openS(_currentSrvIdx + 1), 1200);
+}
+
+function setupFakeDetection() {
+  clearTimeout(_fakeTimer);
+  // Check 1: on loadedmetadata, if duration is very short
+  vid.addEventListener('loadedmetadata', function _onMeta() {
+    vid.removeEventListener('loadedmetadata', _onMeta);
+    if (vid.duration > 0 && vid.duration < 15) {
+      autoNextSrv('فيديو محذوف');
+    }
+  });
+  // Check 2: after 3s of playback, if near end of a short video
+  _fakeTimer = setTimeout(() => {
+    if (vid.duration && vid.duration < 25 && vid.currentTime >= vid.duration - 2) {
+      autoNextSrv('فيديو محذوف');
+    }
+  }, 3500);
+}
+
 function openS(idx) {
   if (idx >= urls.length) { toast('كل السيرفرات متعطلة'); closeP(); return; }
   _currentSrvIdx = idx;
-  clearTimeout(timer);
+  clearTimeout(timer); clearTimeout(_fakeTimer);
   srvErr.classList.remove('show');
   
   const e = urls[idx];
@@ -1153,7 +1184,7 @@ function openS(idx) {
   const isM3u8 = e.url.includes('.m3u8');
   if (isM3u8) {
     loadHlsStream(e.url, vid, function(ok) {
-      if (!ok) { toast('هذا السيرفر غير متوافق'); nextSrv(); return; }
+      if (!ok) { autoNextSrv('السيرفر غير متوافق مع HLS'); return; }
       startPlayback(true);
     });
     if (document.querySelector('script[src*="hls.js"]') && !window.Hls) {
@@ -1167,9 +1198,10 @@ function openS(idx) {
   
   function startPlayback(hls) {
     vid.currentTime = 0; upBtn(); vid.play().catch(()=>{});
+    setupFakeDetection();
     if (!hls) {
       timer = setTimeout(function() {
-        if (vid.readyState < 3) { vid.pause(); vsrc.src=''; vid.load(); nextSrv(); }
+        if (vid.readyState < 3) { vid.pause(); vsrc.src=''; vid.load(); autoNextSrv('بطيء'); }
       }, 15000);
     }
   }
