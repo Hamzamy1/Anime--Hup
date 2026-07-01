@@ -180,146 +180,38 @@ class Anime:
                 return f"{DOMAIN}/e/{self.slug}#{e['watchUrl']}"
         return None
 
-    def get_video_url(self, episode_n):
+    def _get_video_data(self, episode_n):
+        """Shared logic: returns (video_data, ep_code, frag) or None"""
         if not self.eps_data and not self.load_episode_page():
             return None
-
-        ep_info = None
-        for e in self.eps_data:
-            if e["n"] == episode_n:
-                ep_info = e
-                break
+        ep_info = next((e for e in self.eps_data if e["n"] == episode_n), None)
         if not ep_info:
             return None
-
         frag = ep_info["watchUrl"]
+        if not isinstance(frag, str):
+            frag = str(frag) if frag else ""
         parts = self.slug.split("-")
         ep_code = parts[-1] if len(parts) > 1 else self.slug
-
         name = self.api_name or "Lh8SWGFRVFIl"
         san = self.api_san or "Lh8SWGFRVFIl"
         mwsem = self.api_mwsem or base64.b64encode(f"OP,{self.name}".encode()).decode()
-
         try:
             r = requests.get("https://patrimoines-en-mouvement.org/lib/flare/v3.php", headers=HEADERS, timeout=TIMEOUT)
             flare = r.json()
-            first = flare["first"]
-            sec = flare["sec"]
+            first, sec = flare["first"], flare["sec"]
         except Exception as e:
-            self.message = f"Flare API failed: {e}"
+            self.message = f"Flare API: {e}"
             return None
-
         try:
             r2 = requests.post(first, headers={**HEADERS, "Content-Type": "application/x-www-form-urlencoded"},
                                data=f"pe={ep_code}&hash={frag}", timeout=TIMEOUT)
             auth = r2.json()
-            if "a" not in auth or "d" not in auth:
+            if not all(k in auth for k in ("a", "b", "c", "d")):
                 self.message = "Auth API failed"
                 return None
         except Exception as e:
-            self.message = f"Auth API failed: {e}"
+            self.message = f"Auth API: {e}"
             return None
-
-        params = urllib.parse.urlencode({
-            "keyn": auth["d"], "name": name,
-            "pe": auth["c"], "bool": "no",
-            "id": auth["a"], "info": auth["b"],
-            "san": san, "mwsem": mwsem
-        })
-        try:
-            r3 = requests.post(sec, headers={**HEADERS, "Content-Type": "application/x-www-form-urlencoded"},
-                               data=params, timeout=TIMEOUT)
-            video_data = r3.json()
-            if "data" not in video_data:
-                self.message = "Video API failed"
-                return None
-        except Exception as e:
-            self.message = f"Video API failed: {e}"
-            return None
-
-        def extract_video_from_php(php_url):
-            try:
-                r4 = requests.get(php_url, headers=HEADERS, timeout=TIMEOUT)
-                mp4 = re.search(r"src:\s*'([^']+\.mp4)'", r4.text)
-                if mp4:
-                    url = mp4.group(1)
-                    if not url.startswith("http"):
-                        base = php_url.rsplit("/", 1)[0] + "/"
-                        url = urllib.parse.urljoin(base, url)
-                    return url
-                m3u8 = re.search(r"src:\s*'([^']+\.m3u8)'", r4.text)
-                if m3u8:
-                    url = m3u8.group(1)
-                    if not url.startswith("http"):
-                        base = php_url.rsplit("/", 1)[0] + "/"
-                        url = urllib.parse.urljoin(base, url)
-                    return url
-                any_src = re.findall(r"src:\s*'([^']+)'", r4.text)
-                for s in any_src:
-                    if "http" in s and not any(x in s for x in [".js", ".css", "bkvideo.online"]):
-                        if s.endswith(".mp4") or s.endswith(".m3u8") or "/video/" in s or "/d/" in s or "mediafire" in s or "gamescdn" in s:
-                            return s
-            except Exception:
-                pass
-            return None
-
-        def try_server(encrypted_url):
-            php_url = decrypt(encrypted_url)
-            if php_url:
-                if "mega.nz/embed" in php_url:
-                    self.message = "Mega.nz embed (requires extension)"
-                    return php_url
-                return extract_video_from_php(php_url)
-            return None
-
-        result = try_server(video_data["data"])
-        if result:
-            return result
-
-        for srv_name, srv_enc in video_data.get("servers", {}).items():
-            result = try_server(srv_enc)
-            if result:
-                return result
-
-        self.message = "No working video source found"
-        return None
-
-    def get_all_video_urls(self, episode_n):
-        if not self.eps_data and not self.load_episode_page():
-            return []
-
-        ep_info = None
-        for e in self.eps_data:
-            if e["n"] == episode_n:
-                ep_info = e
-                break
-        if not ep_info:
-            return []
-
-        frag = ep_info["watchUrl"]
-        parts = self.slug.split("-")
-        ep_code = parts[-1] if len(parts) > 1 else self.slug
-        name = self.api_name or "Lh8SWGFRVFIl"
-        san = self.api_san or "Lh8SWGFRVFIl"
-        mwsem = self.api_mwsem or base64.b64encode(f"OP,{self.name}".encode()).decode()
-
-        try:
-            r = requests.get("https://patrimoines-en-mouvement.org/lib/flare/v3.php", headers=HEADERS, timeout=TIMEOUT)
-            flare = r.json()
-            first = flare["first"]
-            sec = flare["sec"]
-        except:
-            return []
-
-        try:
-            r2 = requests.post(first, headers={**HEADERS, "Content-Type": "application/x-www-form-urlencoded"},
-                               data=f"pe={ep_code}&hash={frag}", timeout=TIMEOUT)
-            auth = r2.json()
-            if "a" not in auth or "d" not in auth:
-                return []
-        except:
-            return []
-
         params = urllib.parse.urlencode({
             "keyn": auth["d"], "name": name, "pe": auth["c"], "bool": "no",
             "id": auth["a"], "info": auth["b"], "san": san, "mwsem": mwsem
@@ -328,40 +220,83 @@ class Anime:
             r3 = requests.post(sec, headers={**HEADERS, "Content-Type": "application/x-www-form-urlencoded"},
                                data=params, timeout=TIMEOUT)
             video_data = r3.json()
-        except:
-            return []
-
-        def extract_video(encrypted_url):
-            php_url = decrypt(encrypted_url)
-            if not php_url:
-                return None
-            if "mega.nz/embed" in php_url:
-                return php_url
-            try:
-                r4 = requests.get(php_url, headers=HEADERS, timeout=TIMEOUT)
-                for pat in [r"src:\s*'([^']+\.mp4)'", r"src:\s*'([^']+\.m3u8)'"]:
-                    m = re.search(pat, r4.text)
-                    if m:
-                        url = m.group(1)
-                        if not url.startswith("http"):
-                            url = urllib.parse.urljoin(php_url.rsplit("/", 1)[0] + "/", url)
-                        return url
-                any_src = re.findall(r"src:\s*'([^']+)'", r4.text)
-                for s in any_src:
-                    if "http" in s and not any(x in s for x in [".js", ".css", "bkvideo.online"]):
-                        if s.endswith(".mp4") or s.endswith(".m3u8") or "/video/" in s or "/d/" in s or "mediafire" in s or "gamescdn" in s:
-                            return s
-            except:
-                pass
+            return video_data
+        except Exception as e:
+            self.message = f"Video API: {e}"
             return None
 
-        servers_list = [("auto", video_data.get("data", ""))]
-        servers_list.extend(video_data.get("servers", {}).items())
+    def _extract_php_url(self, php_url):
+        try:
+            if not isinstance(php_url, str) or not php_url:
+                return None
+            r4 = requests.get(php_url, headers=HEADERS, timeout=TIMEOUT)
+            for pat in [r"src:\s*'([^']+\.mp4)'", r"src:\s*'([^']+\.m3u8)'"]:
+                m = re.search(pat, r4.text)
+                if m:
+                    url = m.group(1)
+                    if not url.startswith("http"):
+                        url = urllib.parse.urljoin(php_url.rsplit("/", 1)[0] + "/", url)
+                    return url
+            any_src = re.findall(r"src:\s*'([^']+)'", r4.text)
+            for s in any_src:
+                if isinstance(s, str) and "http" in s and not any(x in s for x in [".js", ".css", "bkvideo.online"]):
+                    if s.endswith((".mp4", ".m3u8")) or "/video/" in s or "/d/" in s or "mediafire" in s or "gamescdn" in s:
+                        return s
+        except:
+            pass
+        return None
 
+    def _try_decrypt_url(self, encrypted_url):
+        if not isinstance(encrypted_url, str):
+            return None
+        php_url = decrypt(encrypted_url)
+        if not php_url:
+            return None
+        if "mega.nz/embed" in php_url:
+            return php_url  # treated as success by caller
+        return self._extract_php_url(php_url)
+
+    def _iter_servers(self, video_data):
+        """Yield (name, encrypted_url) from video_data safely."""
+        # Primary data
+        data_val = video_data.get("data") if isinstance(video_data, dict) else None
+        if data_val and isinstance(data_val, str):
+            yield ("auto", data_val)
+        # Servers
+        srv = video_data.get("servers") if isinstance(video_data, dict) else None
+        if isinstance(srv, dict):
+            for k, v in srv.items():
+                if isinstance(v, str):
+                    yield (k, v)
+        elif isinstance(srv, list):
+            for i, v in enumerate(srv):
+                if isinstance(v, str):
+                    yield (f"server_{i+1}", v)
+                elif isinstance(v, dict):
+                    # list of dicts like [{"name":"s1","url":"..."}]
+                    inner = v.get("url") or v.get("data") or v.get("src") or ""
+                    if isinstance(inner, str):
+                        yield (v.get("name", f"server_{i+1}"), inner)
+
+    def get_video_url(self, episode_n):
+        vd = self._get_video_data(episode_n)
+        if not vd or not isinstance(vd, dict):
+            return None
+        for _, enc_url in self._iter_servers(vd):
+            result = self._try_decrypt_url(enc_url)
+            if result:
+                return result
+        self.message = "No working video source found"
+        return None
+
+    def get_all_video_urls(self, episode_n):
+        vd = self._get_video_data(episode_n)
+        if not vd or not isinstance(vd, dict):
+            return []
         results = []
         seen = set()
-        for srv_name, srv_enc in servers_list:
-            url = extract_video(srv_enc)
+        for srv_name, enc_url in self._iter_servers(vd):
+            url = self._try_decrypt_url(enc_url)
             if url and url not in seen:
                 seen.add(url)
                 results.append({"server": srv_name, "url": url})
