@@ -276,7 +276,14 @@ class Anime:
         if result:
             return result
 
-        for srv_name, srv_enc in video_data.get("servers", {}).items():
+        servers_raw = video_data.get("servers") or {}
+        if isinstance(servers_raw, list):
+            srv_iter = enumerate(servers_raw)
+        elif isinstance(servers_raw, dict):
+            srv_iter = servers_raw.items()
+        else:
+            srv_iter = []
+        for srv_name, srv_enc in srv_iter:
             result = try_server(srv_enc)
             if result:
                 return result
@@ -356,7 +363,12 @@ class Anime:
             return None
 
         servers_list = [("auto", video_data.get("data", ""))]
-        servers_list.extend(video_data.get("servers", {}).items())
+        servers_raw = video_data.get("servers") or {}
+        if isinstance(servers_raw, list):
+            for i, val in enumerate(servers_raw):
+                servers_list.append((f"server_{i+1}", val))
+        elif isinstance(servers_raw, dict):
+            servers_list.extend(servers_raw.items())
 
         results = []
         seen = set()
