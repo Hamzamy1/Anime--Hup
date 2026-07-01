@@ -1,9 +1,2 @@
-__pycache__/
-*.pyc
-*.pyo
-*.pyc
-.DS_Store
-Thumbs.db
-*.egg-info/
-dist/
-build/
+node_modules
+.env
