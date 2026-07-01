@@ -602,6 +602,7 @@ const ld = $('loading'), to = $('toast'), nav = $('nav'), stp = $('stop');
 
 let slug = null, animeName = '', eps = [], urls = [], timer = null, bPage = 1;
 let _currentEp = 1, _totalEps = 0;
+let _inPopState = false;
 
 window.addEventListener('scroll', () => {
   const y = window.scrollY;
@@ -609,6 +610,19 @@ window.addEventListener('scroll', () => {
   stp.classList.toggle('show', y > 400);
 });
 stp.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+window.addEventListener('popstate', (e) => {
+  if (!ov.classList.contains('hidden')) {
+    closeP();
+    return;
+  }
+  const targetView = (e.state && e.state.viewId && e.state.viewId !== 'player')
+    ? $(e.state.viewId) : home;
+  if (targetView && !targetView.classList.contains('hidden')) return;
+  _inPopState = true;
+  showView(targetView || home);
+  _inPopState = false;
+});
 
 function toast(msg, t = 'err') {
   to.textContent = msg;
@@ -650,6 +664,9 @@ function showView(v) {
   v.classList.remove('view');
   void v.offsetWidth;
   v.classList.add('view');
+  if (!_inPopState && v.id !== 'home') {
+    history.pushState({ viewId: v.id }, '');
+  }
 }
 
 function loadHome() {
@@ -778,10 +795,7 @@ function showEps() {
 }
 
 backBtn.addEventListener('click', () => {
-  ev.classList.add('hidden');
-  if (!bv.classList.contains('hidden')) bv.scrollIntoView({ behavior:'smooth' });
-  else if (!sv.classList.contains('hidden')) sv.scrollIntoView({ behavior:'smooth' });
-  else home.scrollIntoView({ behavior:'smooth' });
+  history.back();
 });
 
 watchBtn.addEventListener('click', () => playEp());
@@ -843,6 +857,7 @@ function openS(idx) {
   const e = urls[idx];
   const pName = animeName || slug.replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
   pt.textContent = pName + ' — ' + e.server;
+  if (!_inPopState) history.pushState({ viewId: 'player', prevViewId: history.state ? history.state.viewId : 'home' }, '');
   ov.classList.remove('hidden'); ov.classList.add('show');
   pbox.classList.remove('hidden'); pbox.classList.add('show');
 
@@ -1010,6 +1025,9 @@ function closeP() {
   clearTimeout(timer);
   if (document.fullscreenElement) document.exitFullscreen?.();
   if (document.pictureInPictureElement) document.exitPictureInPicture();
+  if (!_inPopState && history.state && history.state.viewId === 'player') {
+    history.replaceState({ viewId: history.state.prevViewId || 'home' }, '');
+  }
 }
 function fmt(s) { if (isNaN(s)) return '0:00'; const m=Math.floor(s/60), sec=Math.floor(s%60); return m+':'+(sec<10?'0':'')+sec; }
 
