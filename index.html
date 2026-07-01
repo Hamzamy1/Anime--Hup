@@ -139,29 +139,35 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
 .player-close:hover{color:#fff;transform:rotate(90deg)}
 .player-wrap{position:relative;width:100%;background:#000;cursor:pointer}
 .player-wrap video,.player-wrap iframe{width:100%;display:block;max-height:40vh;background:#000;border:none}
-.player-bar{display:flex;align-items:center;gap:4px;padding:6px 10px;background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.4) 100%);border-top:1px solid rgba(255,255,255,0.02);direction:ltr;position:relative}
-.pbtn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.005);color:var(--text2);font-size:.62em;padding:5px 8px;border-radius:var(--radius-xs);cursor:pointer;transition:all .25s var(--ease);white-space:nowrap;font-weight:500;min-width:28px;display:flex;align-items:center;justify-content:center;line-height:1}
+.player-bar{background:linear-gradient(to top,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.4) 100%);border-top:1px solid rgba(255,255,255,0.02);direction:ltr;position:relative}
+.p-row{display:flex;align-items:center}
+.p-row-progress{gap:8px;padding:8px 12px 0}
+.p-row-progress .time-display{font-size:.5em;min-width:auto;flex-shrink:0}
+.p-row-progress .progress-wrap{flex:1;min-width:0}
+.p-row-progress .progress-wrap input{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.04);border-radius:10px;outline:none;cursor:pointer;touch-action:none;transition:height .2s}
+.p-row-progress .progress-wrap input:hover{height:6px}
+.p-row-progress .progress-wrap input::-webkit-slider-thumb{-webkit-appearance:none;width:0;height:0;border-radius:50%;background:var(--grad2);cursor:pointer;transition:width .2s,height .2s}
+.p-row-progress .progress-wrap input:hover::-webkit-slider-thumb,.p-row-progress .progress-wrap input:active::-webkit-slider-thumb{width:14px;height:14px;border:2px solid rgba(255,255,255,0.1)}
+.p-row-controls{flex-wrap:wrap;justify-content:center;gap:4px;padding:6px 10px 10px}
+.pbtn{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.004);color:var(--text2);font-size:.6em;padding:6px 9px;border-radius:var(--radius-xs);cursor:pointer;transition:all .25s var(--ease);white-space:nowrap;font-weight:500;min-width:32px;display:flex;align-items:center;justify-content:center;line-height:1;height:32px}
 .pbtn:hover{background:rgba(139,92,246,0.06);color:#fff;border-color:rgba(139,92,246,0.04)}
-.pbtn:active{transform:scale(.92)}
-.pbtn-play{background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.04);font-size:.75em;min-width:36px;padding:5px 12px;color:var(--prim2);font-weight:700}
-.pbtn-play:hover{background:rgba(139,92,246,0.12);color:#fff}
+.pbtn:active{transform:scale(.9)}
+.pbtn-play{background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.04);font-size:.8em;min-width:44px;padding:6px 14px;color:var(--prim2);font-weight:800;height:36px}
+.pbtn-play:hover{background:rgba(139,92,246,0.14);color:#fff}
 .pbtn-vol{min-width:32px;font-size:.7em}
-.progress-wrap{flex:1;min-width:40px;padding:0 2px;display:flex;align-items:center;gap:6px}
-.progress-wrap input{width:100%;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.04);border-radius:10px;outline:none;cursor:pointer;touch-action:none;transition:height .2s}
-.progress-wrap input:hover{height:6px}
-.progress-wrap input::-webkit-slider-thumb{-webkit-appearance:none;width:0;height:0;border-radius:50%;background:var(--grad2);cursor:pointer;transition:width .2s,height .2s}
-.progress-wrap input:hover::-webkit-slider-thumb,.progress-wrap input:active::-webkit-slider-thumb{width:14px;height:14px;border:2px solid rgba(255,255,255,0.1)}
+.p-sep{width:1px;height:22px;background:rgba(255,255,255,0.04);flex-shrink:0;margin:0 2px}
 .time-display{font-size:.5em;color:var(--text2);min-width:48px;text-align:center;direction:ltr;font-variant-numeric:tabular-nums;user-select:none}
 .pbtn-srv{font-size:.5em;padding:4px 6px;min-width:auto}
 .pbtn-active{background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.06);color:var(--prim2)}
-.speed-menu{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(8,8,18,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,0.03);border-radius:var(--radius-xs);padding:4px;display:flex;gap:2px;margin-bottom:4px;animation:smIn .2s var(--ease-spring)}
+.vol-slider{flex-shrink:0}
+.speed-menu{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:rgba(8,8,18,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(139,92,246,0.03);border-radius:var(--radius-xs);padding:4px;display:flex;gap:2px;margin-bottom:8px;animation:smIn .2s var(--ease-spring);z-index:10}
 @keyframes smIn{from{opacity:0;transform:translateX(-50%) translateY(4px) scale(.95)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
 .speed-opt{padding:4px 10px;border:none;background:none;color:var(--text2);font-size:.6em;border-radius:4px;cursor:pointer;transition:all .2s;font-weight:500}
 .speed-opt:hover{background:rgba(139,92,246,0.04);color:#fff}
 .speed-opt.active{background:rgba(139,92,246,0.08);color:var(--prim2);font-weight:700}
 .player-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;font-size:1.5em;color:#fff;pointer-events:none;opacity:0;z-index:10}
 .player-hint.show{animation:hintP .5s var(--ease)}
-@keyframes hintP{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}60%{opacity:1;transform:translate(-50%,-50%) scale(1)}to{opacity:0;transform:translate(-50%,-50%) scale(.8)}}
+@keyframes hintP{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}60%{opacity:1;transform:translate(-50%,-50%) scale(1)}to{opacity:0;transform:translate(-50%,-50%) scale(.8)}
 
 .loading{position:fixed;inset:0;z-index:2000;background:rgba(5,5,10,0.7);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .loading.show{animation:pIn .3s var(--ease)}
@@ -208,12 +214,14 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
 .eps-top{flex-direction:row;align-items:center;justify-content:space-between}
 .eps-actions input{max-width:80px;flex:none}
 .player-wrap video,.player-wrap iframe{max-height:45vh}
-.pbtn{font-size:.68em;padding:6px 10px}
-.pbtn-play{font-size:.82em;min-width:40px}
-.pbtn-vol{min-width:36px}
+.pbtn{font-size:.68em;padding:7px 10px;min-width:34px;height:34px}
+.pbtn-play{font-size:.85em;min-width:46px;padding:7px 16px;height:38px}
+.pbtn-vol{min-width:34px}
+.p-sep{height:24px}
 .time-display{font-size:.55em;min-width:58px}
-.pbtn-srv{font-size:.55em;padding:4px 8px}
-.player-bar{gap:5px;padding:8px 12px}
+.pbtn-srv{font-size:.55em;padding:5px 8px}
+.p-row-progress{padding:9px 14px 0;gap:10px}
+.p-row-controls{gap:5px;padding:7px 12px 11px}
 .toast{right:16px;left:16px;max-width:400px;margin:0 auto}
 }
 
@@ -233,10 +241,13 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
 .ep-info h2{font-size:1.3em}
 .eps-grid{max-height:380px}
 .player-wrap video,.player-wrap iframe{max-height:55vh}
-.pbtn{font-size:.72em;padding:7px 12px}
-.pbtn-play{font-size:.88em;min-width:44px;padding:7px 16px}
+.pbtn{font-size:.75em;padding:8px 12px;min-width:36px;height:36px}
+.pbtn-play{font-size:.9em;min-width:48px;padding:8px 18px;height:40px}
+.pbtn-vol{min-width:36px}
+.p-sep{height:26px}
 .time-display{font-size:.6em;min-width:75px}
-.player-bar{gap:8px;padding:10px 14px}
+.p-row-progress{padding:10px 16px 0;gap:12px}
+.p-row-controls{gap:6px;padding:8px 14px 12px}
 .player-top{padding:12px 20px}
 .player-top span{font-size:.82em}
 }
@@ -282,12 +293,15 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
 .eps-wrap{padding:20px;border-radius:var(--radius)}
 .player-box{margin:16px}
 .player-wrap video,.player-wrap iframe{max-height:70vh}
-.player-bar{gap:10px;padding:12px 18px}
-.pbtn{font-size:.78em;padding:8px 14px}
-.pbtn-play{min-width:48px;padding:8px 18px;font-size:.92em}
-.pbtn-vol{min-width:40px;font-size:.8em}
+.player-bar{padding:0}
+.pbtn{font-size:.82em;padding:9px 14px;min-width:38px;height:38px}
+.pbtn-play{min-width:52px;padding:9px 20px;font-size:.95em;height:42px}
+.pbtn-vol{min-width:38px;font-size:.8em}
+.p-sep{height:28px}
 .time-display{font-size:.65em;min-width:90px}
-.pbtn-srv{font-size:.6em;padding:5px 10px}
+.pbtn-srv{font-size:.6em;padding:6px 10px}
+.p-row-progress{padding:12px 20px 0;gap:14px}
+.p-row-controls{gap:8px;padding:10px 18px 14px}
 .player-top{padding:12px 20px}
 .player-top span{font-size:.85em}
 .toast{right:24px;left:auto;top:80px;max-width:340px;font-size:.82em;padding:10px 20px;white-space:nowrap;text-align:right}
@@ -302,8 +316,11 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
 @media(orientation:landscape) and (max-height:500px){
 .player-wrap video,.player-wrap iframe{max-height:85vh}
 .hero-title{font-size:1.5em}
-.player-bar{padding:4px 6px}
-.pbtn{padding:3px 6px;font-size:.55em}
+.p-row-progress{padding:4px 6px 0}
+.p-row-controls{gap:2px;padding:2px 4px 6px}
+.pbtn{padding:3px 5px;font-size:.5em;height:26px;min-width:26px}
+.pbtn-play{min-width:34px;height:30px;padding:3px 10px;font-size:.65em}
+.p-sep{height:16px}
 }
 
 /* ── Touch ── */
@@ -445,7 +462,6 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
     <div class="player-top">
       <span id="ptitle"></span>
       <div style="display:flex;align-items:center;gap:4px">
-        <button id="pipBtn" class="pbtn" title="صورة داخل صورة" style="font-size:.55em;padding:3px 6px">📺</button>
         <button id="pclose" class="player-close">&times;</button>
       </div>
     </div>
@@ -455,26 +471,32 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
       <iframe id="ifr" class="hidden" allowfullscreen></iframe>
     </div>
     <div class="player-bar">
-      <button id="pprevEp" class="pbtn" title="الحلقة السابقة">⏮</button>
-      <button id="pplay" class="pbtn pbtn-play">▶</button>
-      <button id="pnextEp" class="pbtn" title="الحلقة التالية">⏭</button>
-      <button id="prev" class="pbtn" title="رجوع 10 ثوان">⏪</button>
-      <button id="next" class="pbtn" title="تقديم 10 ثوان">⏩</button>
-      <button id="pvol" class="pbtn pbtn-vol" title="كتم الصوت">🔊</button>
-      <input type="range" id="volSlider" min="0" max="100" value="100" style="width:50px;height:3px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.04);border-radius:10px;outline:none;cursor:pointer">
-      <div class="progress-wrap">
-        <input type="range" id="prog" value="0" min="0" max="1000">
+      <div class="p-row p-row-progress">
+        <span id="tdisp" class="time-display">0:00 / 0:00</span>
+        <div class="progress-wrap">
+          <input type="range" id="prog" value="0" min="0" max="1000">
+        </div>
       </div>
-      <span id="tdisp" class="time-display">0:00 / 0:00</span>
-      <button id="pspeed" class="pbtn" title="سرعة التشغيل">1×</button>
+      <div class="p-row p-row-controls">
+        <button id="pprevEp" class="pbtn" title="الحلقة السابقة">⏮</button>
+        <button id="prev" class="pbtn" title="رجوع 10 ثوان">⏪</button>
+        <button id="pplay" class="pbtn pbtn-play">▶</button>
+        <button id="next" class="pbtn" title="تقديم 10 ثوان">⏩</button>
+        <button id="pnextEp" class="pbtn" title="الحلقة التالية">⏭</button>
+        <span class="p-sep"></span>
+        <button id="pvol" class="pbtn pbtn-vol" title="كتم الصوت">🔊</button>
+        <input type="range" id="volSlider" min="0" max="100" value="100" class="vol-slider" style="width:50px;height:3px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.04);border-radius:10px;outline:none;cursor:pointer">
+        <button id="pspeed" class="pbtn" title="سرعة التشغيل">1×</button>
+        <button id="psrv" class="pbtn pbtn-srv" title="تبديل السيرفر">🔄</button>
+        <button id="pipBtn" class="pbtn" title="صورة داخل صورة">📺</button>
+        <button id="pfull" class="pbtn" title="شاشة كاملة">⛶</button>
+      </div>
       <div id="speedMenu" class="speed-menu hidden">
         <button class="speed-opt" data-speed="0.5">0.5×</button>
         <button class="speed-opt active" data-speed="1">1×</button>
         <button class="speed-opt" data-speed="1.5">1.5×</button>
         <button class="speed-opt" data-speed="2">2×</button>
       </div>
-      <button id="psrv" class="pbtn pbtn-srv" title="تبديل السيرفر">🔄</button>
-      <button id="pfull" class="pbtn" title="شاشة كاملة">⛶</button>
     </div>
   </div>
 </div>
