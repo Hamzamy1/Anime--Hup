@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
 :root{--bg:#080812;--bg2:#0e0e1a;--bg3:#16162a;--card-bg:#111126;--card-border:rgba(139,92,246,0.06);--card-hover:rgba(139,92,246,0.12);--prim:#8b5cf6;--prim2:#c4b5fd;--prim3:#a78bfa;--sec:#818cf8;--gold:#fbbf24;--grad:linear-gradient(135deg,#8b5cf6,#a78bfa);--grad2:linear-gradient(135deg,#6366f1,#8b5cf6);--text:#f0f0ff;--text2:#a8a8c8;--text3:#6a6a8a;--radius:14px;--radius-sm:10px;--radius-xs:6px;--nav-h:64px;--ease:cubic-bezier(0.16,1,0.3,1);--easeOut:cubic-bezier(0,0,0.2,1);--glow:0 0 40px rgba(139,92,246,0.08);--glowStrong:0 0 60px rgba(139,92,246,0.15)}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{font-family:'Inter','Noto Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.5}#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none;width:100%;height:100%}::selection{background:rgba(139,92,246,0.3);color:#fff}::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(139,92,246,0.12);border-radius:20px}
 
@@ -359,6 +360,57 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
 .browse-select,.browse-input{font-size:.65em;padding:4px 7px;max-width:90px}
 .player-wrap{max-height:45vh}
 }
+
+/* ── Player Bar ── */
+.player-bar{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.85),rgba(0,0,0,0.4),transparent);padding:8px 0 4px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:5}
+.player-box:hover .player-bar{opacity:1}
+.pbar-controls{display:flex;align-items:center;justify-content:space-between;padding:0 12px;gap:6px}
+.pbar-left,.pbar-right{display:flex;align-items:center;gap:4px}
+.pbtn{background:none;border:none;color:#fff;font-size:1em;cursor:pointer;padding:4px 6px;border-radius:4px;transition:background .2s;line-height:1;min-width:28px;text-align:center}
+.pbtn:hover{background:rgba(255,255,255,0.12)}
+.pbtn:active{background:rgba(255,255,255,0.2)}
+.pbar-time{font-size:.75em;color:rgba(255,255,255,0.8);font-variant-numeric:tabular-nums;white-space:nowrap;min-width:80px;text-align:center;font-family:monospace}
+.pbar-progress-wrap{width:100%;padding:0 12px;margin-bottom:4px;cursor:pointer}
+.pbar-progress{position:relative;width:100%;height:4px;background:rgba(255,255,255,0.12);border-radius:4px;cursor:pointer}
+.pbar-progress:hover{height:6px}
+.pbar-buffer{position:absolute;top:0;left:0;height:100%;background:rgba(255,255,255,0.18);border-radius:4px;width:0%}
+.pbar-bar{position:absolute;top:0;left:0;height:100%;background:var(--grad);border-radius:4px;width:0%}
+.pbar-thumb{position:absolute;top:50%;width:12px;height:12px;background:#fff;border-radius:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity .2s;box-shadow:0 0 6px rgba(0,0,0,0.3)}
+.pbar-progress:hover .pbar-thumb{opacity:1}
+.player-progress-mini{position:absolute;bottom:0;left:0;height:3px;background:var(--grad);width:0%;z-index:6}
+/* Volume */
+.vol-wrap{display:flex;align-items:center;gap:4px;position:relative}
+.vol-range{width:60px;height:3px;appearance:none;-webkit-appearance:none;background:rgba(255,255,255,0.15);border-radius:3px;outline:none}
+.vol-range::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:#fff;cursor:pointer}
+.vol-range::-moz-range-thumb{width:10px;height:10px;border-radius:50%;background:#fff;cursor:pointer;border:none}
+/* Speed */
+.speed-wrap{position:relative}
+.speed-menu{position:absolute;bottom:100%;left:0;background:rgba(10,10,24,0.96);border:1px solid rgba(139,92,246,0.08);border-radius:var(--radius-xs);padding:4px;display:none;min-width:70px;margin-bottom:4px}
+.speed-menu.show{display:block}
+.speed-menu div{padding:5px 10px;font-size:.75em;color:var(--text2);cursor:pointer;border-radius:4px;text-align:center}
+.speed-menu div:hover{background:rgba(139,92,246,0.1);color:#fff}
+/* More menu */
+.more-menu{position:absolute;bottom:100%;right:0;background:rgba(10,10,24,0.96);border:1px solid rgba(139,92,246,0.08);border-radius:var(--radius-xs);padding:4px;display:none;min-width:140px;margin-bottom:4px}
+.more-menu.show{display:block}
+.more-item{padding:6px 12px;font-size:.78em;color:var(--text2);cursor:pointer;border-radius:4px;white-space:nowrap}
+.more-item:hover{background:rgba(139,92,246,0.1);color:#fff}
+/* Shortcuts hint */
+.shortcuts-hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,10,24,0.97);border:1px solid rgba(139,92,246,0.08);border-radius:var(--radius);padding:20px 28px;z-index:200;display:none;min-width:260px;backdrop-filter:blur(20px)}
+.shortcuts-hint.show{display:block}
+.shortcuts-content{display:flex;flex-direction:column;gap:6px}
+.shortcuts-title{font-size:.9em;font-weight:700;color:#fff;margin-bottom:8px;text-align:center}
+.shortcuts-row{display:flex;justify-content:space-between;gap:20px;font-size:.75em}
+.shortcuts-row span:first-child{color:var(--prim2);font-weight:600;font-family:monospace;background:rgba(139,92,246,0.06);padding:1px 8px;border-radius:4px}
+.shortcuts-row span:last-child{color:var(--text2)}
+/* Box sizing fix for player */
+.player-wrap video{width:100%;height:100%;object-fit:contain;display:block}
+@media(max-width:480px){
+.vol-range{width:40px}
+.pbar-controls{padding:0 6px}
+.pbtn{font-size:.85em;min-width:24px;padding:3px 4px}
+.pbar-time{font-size:.68em;min-width:65px}
+.speed-menu div{font-size:.7em;padding:4px 8px}
+}
 </style>
 </head>
 <body>
@@ -471,12 +523,69 @@ nav.scrolled{background:rgba(8,8,18,0.92);border-bottom:1px solid rgba(139,92,24
       <button id="pclose" class="player-close">&times;</button>
     </div>
     <div class="player-wrap" id="pwrap">
-      <iframe id="ifr" allowfullscreen></iframe>
+      <video id="vid" playsinline></video>
+      <iframe id="ifr" allowfullscreen style="display:none"></iframe>
+      <div class="player-progress-mini" id="ppm"></div>
       <div class="srv-error-overlay" id="srvErr">
         <p id="srvErrMsg">⛔ كل السيرفرات متعطلة</p>
         <button id="srvRetry" class="try-btn">🔄 إعادة المحاولة</button>
       </div>
     </div>
+    <div class="player-bar" id="pbar">
+      <div class="pbar-progress-wrap">
+        <div class="pbar-progress" id="pp">
+          <div class="pbar-buffer" id="pbuf"></div>
+          <div class="pbar-bar" id="ppb"></div>
+          <div class="pbar-thumb" id="ppt"></div>
+        </div>
+      </div>
+      <div class="pbar-controls">
+        <div class="pbar-left">
+          <button id="playBtn" class="pbtn">▶</button>
+          <button id="rewBtn" class="pbtn">⏪</button>
+          <button id="fwdBtn" class="pbtn">⏩</button>
+          <span id="timeDisp" class="pbar-time">0:00 / 0:00</span>
+        </div>
+        <div class="pbar-right">
+          <div class="vol-wrap">
+            <button id="volBtn" class="pbtn">🔊</button>
+            <input type="range" id="volRange" class="vol-range" min="0" max="1" step="0.05" value="1">
+          </div>
+          <div class="speed-wrap">
+            <button id="speedBtn" class="pbtn">1x</button>
+            <div class="speed-menu" id="speedMenu">
+              <div data-speed="0.25">0.25x</div>
+              <div data-speed="0.5">0.5x</div>
+              <div data-speed="0.75">0.75x</div>
+              <div data-speed="1">1x</div>
+              <div data-speed="1.25">1.25x</div>
+              <div data-speed="1.5">1.5x</div>
+              <div data-speed="2">2x</div>
+            </div>
+          </div>
+          <button id="pipBtn" class="pbtn">📺</button>
+          <button id="fsBtn" class="pbtn">⛶</button>
+          <button id="moreBtn" class="pbtn">⋮</button>
+          <div class="more-menu" id="moreMenu">
+            <div class="more-item" id="mmServers">🔁 تبديل السيرفر</div>
+            <div class="more-item" id="mmCopy">📋 نسخ الرابط</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="shortcuts-hint" id="shortcutsHint">
+  <div class="shortcuts-content">
+    <div class="shortcuts-title">اختصارات لوحة المفاتيح</div>
+    <div class="shortcuts-row"><span>مسافة</span><span>تشغيل / إيقاف</span></div>
+    <div class="shortcuts-row"><span>→</span><span>تقديم 5 ثوان</span></div>
+    <div class="shortcuts-row"><span>←</span><span>ترجيع 5 ثوان</span></div>
+    <div class="shortcuts-row"><span>↑</span><span>رفع الصوت</span></div>
+    <div class="shortcuts-row"><span>↓</span><span>خفض الصوت</span></div>
+    <div class="shortcuts-row"><span>F</span><span>ملء الشاشة</span></div>
+    <div class="shortcuts-row"><span>M</span><span>كتم الصوت</span></div>
+    <div class="shortcuts-row"><span>0-9</span><span>سرعة التشغيل</span></div>
   </div>
 </div>
 
@@ -599,6 +708,13 @@ const ov = $('player'), ifr = $('ifr'), pt = $('ptitle'), pc = $('pclose');
 const srvErr = $('srvErr'), srvErrMsg = $('srvErrMsg'), srvRetry = $('srvRetry');
 const to = $('toast'), ld = $('loading'), stp = $('stop');
 const nav = $('nav');
+const vid = $('vid'), pbar = $('pbar'), pp = $('pp'), ppb = $('ppb'), ptb = $('ppt');
+const pbuf = $('pbuf'), playBtn = $('playBtn'), rewBtn = $('rewBtn'), fwdBtn = $('fwdBtn');
+const timeDisp = $('timeDisp'), volBtn = $('volBtn'), volRange = $('volRange');
+const speedBtn = $('speedBtn'), speedMenu = $('speedMenu'), pipBtn = $('pipBtn');
+const fsBtn = $('fsBtn'), moreBtn = $('moreBtn'), moreMenu = $('moreMenu');
+const mmServers = $('mmServers'), mmCopy = $('mmCopy'), ppm = $('ppm');
+const shortcutsHint = $('shortcutsHint');
 
 let slug = null, animeName = '', eps = [], urls = [], timer = null, bPage = 1;
 let _inPopState = false;
@@ -826,38 +942,222 @@ function openS(idx) {
   ov.classList.remove('hidden'); ov.classList.add('show');
   $('pbox').classList.remove('hidden'); $('pbox').classList.add('show');
   
-  ifr.src = e.url;
+  // Stop current video playback
+  vid.pause(); vid.src = ''; vid.removeAttribute('src');
+  ifr.style.display = 'none'; ifr.src = '';
+  ifr.onload = ifr.onerror = null;
+  clearTimeout(timer); clearTimeout(vid._ft1); clearTimeout(vid._ft2);
+  pbar.classList.remove('hidden');
   
-  // Auto-switch on timeout (15s) or iframe error
-  clearTimeout(timer);
-  timer = setTimeout(() => autoNextSrv('لم يتم التحميل'), 15000);
+  const url = e.url;
+  
+  if (url.includes('mega.nz') || url.includes('embed')) {
+    // Embed URL → use iframe
+    ifr.style.display = 'block';
+    ifr.src = url;
+    ifr.onload = () => { clearTimeout(timer); };
+    ifr.onerror = () => { autoNextSrv('خطأ'); };
+    timer = setTimeout(() => autoNextSrv('لم يتم التحميل'), 15000);
+  } else {
+    // Direct video URL → use <video>
+    vid.style.display = 'block';
+    initHls(url);
+    initVideoEvents();
+    timer = setTimeout(() => autoNextSrv('لم يتم التحميل'), 20000);
+  }
 }
+
+function initHls(url) {
+  if (url.includes('.m3u8')) {
+    if (Hls.isSupported()) {
+      var h = new Hls();
+      h.loadSource(url);
+      h.attachMedia(vid);
+      h.on(Hls.Events.MANIFEST_PARSED, () => { vid.play().catch(()=>{}); });
+      vid._hls = h;
+    } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
+      vid.src = url;
+      vid.play().catch(()=>{});
+    } else {
+      toast('المتصفح لا يدعم التشغيل'); autoNextSrv('HLS unsupported');
+    }
+  } else {
+    vid.src = url;
+    vid.play().catch(()=>{});
+  }
+}
+
+function initVideoEvents() {
+  vid.onloadedmetadata = () => {
+    timeDisp.textContent = fmt(vid.currentTime) + ' / ' + fmt(vid.duration);
+  };
+  vid.ontimeupdate = () => {
+    if (!vid.duration) return;
+    const pct = (vid.currentTime / vid.duration) * 100;
+    ppb.style.width = pct + '%';
+    ptb.style.left = pct + '%';
+    timeDisp.textContent = fmt(vid.currentTime) + ' / ' + fmt(vid.duration);
+    ppm.style.width = pct + '%';
+    // Fake video detection: check after 3s then 5s
+    if (!vid._checked) {
+      vid._checked = true;
+      clearTimeout(vid._ft1);
+      vid._ft1 = setTimeout(() => {
+        if (vid.currentTime < 0.5) {
+          vid._ft2 = setTimeout(() => {
+            if (vid.currentTime < 1) {
+              autoNextSrv('تم حذف الفيديو');
+            }
+          }, 2000);
+        }
+      }, 3000);
+    }
+  };
+  vid.onwaiting = () => { clearTimeout(timer); };
+  vid.onplaying = () => { clearTimeout(timer); };
+  vid.onerror = () => { autoNextSrv('فيديو معطل'); };
+  vid.onprogress = () => {
+    if (vid.buffered && vid.buffered.length) {
+      pbuf.style.width = ((vid.buffered.end(vid.buffered.length-1) / vid.duration) * 100) + '%';
+    }
+  };
+  vid.onended = () => { playBtn.textContent = '▶'; };
+}
+
+function fmt(t) { const m = Math.floor(t/60); const s = Math.floor(t%60); return m + ':' + (s<10?'0':'') + s; }
+
+/* ── Video Controls ── */
+playBtn.addEventListener('click', () => {
+  if (vid.paused) { vid.play(); playBtn.textContent = '⏸'; }
+  else { vid.pause(); playBtn.textContent = '▶'; }
+});
+vid.onplay = () => { playBtn.textContent = '⏸'; };
+vid.onpause = () => { playBtn.textContent = '▶'; };
+
+rewBtn.addEventListener('click', () => { vid.currentTime = Math.max(0, vid.currentTime - 5); });
+fwdBtn.addEventListener('click', () => { vid.currentTime = Math.min(vid.duration || 0, vid.currentTime + 5); });
+
+/* Progress bar */
+pp.addEventListener('click', (e) => {
+  const r = pp.getBoundingClientRect();
+  const pct = (e.clientX - r.left) / r.width;
+  if (vid.duration) vid.currentTime = pct * vid.duration;
+});
+let _ppDrag = false;
+pp.addEventListener('mousedown', (e) => { _ppDrag = true; });
+document.addEventListener('mousemove', (e) => {
+  if (!_ppDrag) return;
+  const r = pp.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  ppb.style.width = (pct * 100) + '%';
+  if (vid.duration) timeDisp.textContent = fmt(pct * vid.duration) + ' / ' + fmt(vid.duration);
+});
+document.addEventListener('mouseup', (e) => {
+  if (!_ppDrag) return;
+  _ppDrag = false;
+  const r = pp.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+  if (vid.duration) vid.currentTime = pct * vid.duration;
+});
+
+/* Volume */
+let _volMuted = false, _volBefore = 1;
+volBtn.addEventListener('click', () => {
+  if (vid.volume > 0) { _volBefore = vid.volume; vid.volume = 0; volBtn.textContent = '🔇'; }
+  else { vid.volume = _volBefore; volBtn.textContent = vid.volume > 0.5 ? '🔊' : '🔉'; }
+  volRange.value = vid.volume;
+});
+volRange.addEventListener('input', () => {
+  vid.volume = parseFloat(volRange.value);
+  volBtn.textContent = vid.volume === 0 ? '🔇' : vid.volume > 0.5 ? '🔊' : '🔉';
+});
+
+/* Speed */
+speedBtn.addEventListener('click', (e) => { e.stopPropagation(); speedMenu.classList.toggle('show'); });
+speedMenu.querySelectorAll('div').forEach(el => {
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const s = parseFloat(el.dataset.speed);
+    vid.playbackRate = s;
+    speedBtn.textContent = s + 'x';
+    speedMenu.classList.remove('show');
+  });
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.speed-wrap')) speedMenu.classList.remove('show');
+});
+
+/* PiP */
+pipBtn.addEventListener('click', () => {
+  if (document.pictureInPictureElement) { document.exitPictureInPicture(); }
+  else if (vid.requestPictureInPicture) { vid.requestPictureInPicture().catch(()=>{}); }
+});
+
+/* Fullscreen */
+fsBtn.addEventListener('click', () => {
+  if (document.fullscreenElement) { document.exitFullscreen(); }
+  else { const el = $('pbox') || document.documentElement; el.requestFullscreen(); }
+});
+
+/* More menu */
+moreBtn.addEventListener('click', (e) => { e.stopPropagation(); moreMenu.classList.toggle('show'); });
+document.addEventListener('click', () => moreMenu.classList.remove('show'));
+mmServers.addEventListener('click', () => { moreMenu.classList.remove('show'); autoNextSrv('يدوي'); });
+mmCopy.addEventListener('click', () => {
+  moreMenu.classList.remove('show');
+  const u = vid.src || ifr.src;
+  if (u) { navigator.clipboard.writeText(u).then(() => toast('تم نسخ الرابط','ok')).catch(()=>{}); }
+});
+
+/* Keyboard shortcuts */
+document.addEventListener('keydown', (e) => {
+  if (!e.target.closest) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  const pv = ov.classList.contains('show');
+  switch (e.key) {
+    case ' ': e.preventDefault(); if (pv) playBtn.click(); break;
+    case 'ArrowLeft': e.preventDefault(); if (pv) rewBtn.click(); break;
+    case 'ArrowRight': e.preventDefault(); if (pv) fwdBtn.click(); break;
+    case 'ArrowUp': e.preventDefault(); if (pv) { volRange.value = Math.min(1, vid.volume + 0.1); volRange.dispatchEvent(new Event('input')); } break;
+    case 'ArrowDown': e.preventDefault(); if (pv) { volRange.value = Math.max(0, vid.volume - 0.1); volRange.dispatchEvent(new Event('input')); } break;
+    case 'f': case 'F': e.preventDefault(); if (pv) fsBtn.click(); break;
+    case 'm': case 'M': e.preventDefault(); if (pv) volBtn.click(); break;
+    case '?': e.preventDefault(); shortcutsHint.classList.toggle('show'); break;
+    default: if (/^[0-9]$/.test(e.key) && pv) { vid.playbackRate = parseInt(e.key)/2 || 0.1; speedBtn.textContent = vid.playbackRate.toFixed(2).replace(/\.?0+$/,'')+'x'; }
+  }
+});
+shortcutsHint.addEventListener('click', () => shortcutsHint.classList.remove('show'));
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.speed-menu')) speedMenu.classList.remove('show');
+  if (!e.target.closest('.more-menu')) moreMenu.classList.remove('show');
+});
 
 function autoNextSrv(reason) {
   if (_fakeRetries >= MAX_FAKE_RETRIES) { toast('كل السيرفرات متعطلة'); closeP(); return; }
   _fakeRetries++;
-  clearTimeout(timer);
-  ifr.src = '';
+  clearTimeout(timer); clearTimeout(vid._ft1); clearTimeout(vid._ft2);
+  vid.pause(); vid.src = ''; vid.removeAttribute('src'); vid._checked = false;
+  ifr.src = ''; ifr.style.display = 'none'; ifr.onload = ifr.onerror = null;
+  pbar.classList.add('hidden');
   toast('⚠ ' + reason + ' — جرب سيرفر تاني...', 'err');
   setTimeout(() => openS(_currentSrvIdx + 1), 1200);
 }
 
-// If iframe loads, cancel the timeout (page loaded)
-ifr.addEventListener('load', () => { clearTimeout(timer); });
-
-// If iframe errors, auto-advance
-ifr.addEventListener('error', () => { autoNextSrv('خطأ في السيرفر'); });
-
 pc.addEventListener('click', closeP);
 
 function closeP() {
-  ifr.src = '';
+  vid.pause(); vid.src = ''; vid.removeAttribute('src'); vid._checked = false;
+  if (vid._hls) { vid._hls.destroy(); vid._hls = null; }
+  ifr.src = ''; ifr.style.display = 'none'; ifr.onload = ifr.onerror = null;
+  clearTimeout(timer); clearTimeout(vid._ft1); clearTimeout(vid._ft2);
   ov.classList.remove('show'); ov.classList.add('hidden');
   $('pbox').classList.add('hidden');
   $('pbox').classList.remove('show');
-  clearTimeout(timer);
   srvErr.classList.remove('show');
+  pbar.classList.add('hidden');
+  speedMenu.classList.remove('show'); moreMenu.classList.remove('show');
   if (document.fullscreenElement) document.exitFullscreen?.();
+  if (document.pictureInPictureElement) document.exitPictureInPicture();
 }
 
 srvRetry.addEventListener('click', () => {
@@ -865,6 +1165,8 @@ srvRetry.addEventListener('click', () => {
   openS(_currentSrvIdx + 1);
 });
 
+/* ── Init ── */
+pbar.classList.add('hidden');
 document.addEventListener('DOMContentLoaded', loadHome);
 </script>
 </body>
