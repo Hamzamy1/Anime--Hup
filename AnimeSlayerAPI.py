@@ -229,19 +229,34 @@ class Anime:
         try:
             if not isinstance(php_url, str) or not php_url:
                 return None
+            # Skip known-failure pages
+            if "vfail" in php_url or "vdeleted" in php_url or "verror" in php_url:
+                return None
             r4 = requests.get(php_url, headers=HEADERS, timeout=TIMEOUT)
+            text = r4.text
+            # Check for deleted/removed indicators in the page (specific only)
+            deleted_keywords = ["\u062A\u0645 \u062D\u0630\u0641", "\u0645\u062D\u0630\u0648\u0641",
+                                "\u062A\u0645 \u0625\u0632\u0627\u0644\u0629", "video has been deleted",
+                                "video removed", "this video is no longer", "content removed"]
+            for kw in deleted_keywords:
+                if kw in text.lower():
+                    return None
             for pat in [r"src:\s*'([^']+\.mp4)'", r"src:\s*'([^']+\.m3u8)'"]:
-                m = re.search(pat, r4.text)
+                m = re.search(pat, text)
                 if m:
                     url = m.group(1)
+                    # Skip placeholder videos
+                    if "vid.mp4" in url or "placeholder" in url or "deleted" in url:
+                        return None
                     if not url.startswith("http"):
                         url = urllib.parse.urljoin(php_url.rsplit("/", 1)[0] + "/", url)
                     return url
-            any_src = re.findall(r"src:\s*'([^']+)'", r4.text)
+            any_src = re.findall(r"src:\s*'([^']+)'", text)
             for s in any_src:
                 if isinstance(s, str) and "http" in s and not any(x in s for x in [".js", ".css", "bkvideo.online"]):
                     if s.endswith((".mp4", ".m3u8")) or "/video/" in s or "/d/" in s or "mediafire" in s or "gamescdn" in s:
-                        return s
+                        if "vid.mp4" not in s and "placeholder" not in s and "deleted" not in s:
+                            return s
         except:
             pass
         return None
