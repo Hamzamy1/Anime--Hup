@@ -1,4 +1,4 @@
-import re, base64, json, requests, urllib.parse
+import re, base64, json, requests, urllib.parse, time
 
 DOMAIN = "https://animeslayer.to"
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Referer": "https://animeslayer.to/"}
@@ -215,14 +215,24 @@ class Anime:
             "keyn": auth["d"], "name": name, "pe": auth["c"], "bool": "no",
             "id": auth["a"], "info": auth["b"], "san": san, "mwsem": mwsem
         })
-        try:
-            r3 = requests.post(sec, headers={**HEADERS, "Content-Type": "application/x-www-form-urlencoded"},
-                               data=params, timeout=TIMEOUT)
-            video_data = r3.json()
-            return video_data
-        except Exception as e:
-            self.message = f"Video API: {e}"
-            return None
+        for _ in range(6):
+            try:
+                r3 = requests.post(sec, headers={**HEADERS, "Content-Type": "application/x-www-form-urlencoded"},
+                                   data=params, timeout=TIMEOUT)
+                video_data = r3.json()
+                # Check if data decrypts to a valid (non-vfail) URL
+                if isinstance(video_data, dict):
+                    raw = video_data.get("data")
+                    if raw and isinstance(raw, str):
+                        p = decrypt(raw)
+                        if p and "vfail" not in p and "vdeleted" not in p and "verror" not in p:
+                            return video_data
+                # Retry on vfail
+                time.sleep(0.3)
+            except Exception as e:
+                self.message = f"Video API: {e}"
+                return None
+        return video_data if isinstance(video_data, dict) else None
 
     def _extract_php_url(self, php_url):
         try:
@@ -252,7 +262,7 @@ class Anime:
                     return url
             any_src = re.findall(r"src:\s*'([^']+)'", text)
             for s in any_src:
-                if isinstance(s, str) and "http" in s and not any(x in s for x in [".js", ".css", "bkvideo.online"]):
+                if isinstance(s, str) and "http" in s and not any(x in s for x in [".js", ".css"]):
                     if s.endswith((".mp4", ".m3u8")) or "/video/" in s or "/d/" in s or "mediafire" in s or "gamescdn" in s:
                         if "vid.mp4" not in s and "placeholder" not in s and "deleted" not in s:
                             return s
