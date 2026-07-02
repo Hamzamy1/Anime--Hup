@@ -35,36 +35,12 @@ def extract(s, start_marker, end_markers, skip=0):
             return None, skip
     return s[start:best_end], best_end + 1
 
-def resolve_slug(anime_name, fallback_slug=None):
-    """Search AnimeSlayer's search API to find the real slug for an anime."""
-    if not anime_name:
-        return fallback_slug
-    try:
-        r = requests.get(f"{DOMAIN}/api/search.php?q={urllib.parse.quote(anime_name)}", headers=HEADERS, timeout=TIMEOUT)
-        data = r.json()
-        if not data:
-            return fallback_slug
-        # Prefer exact match
-        ln = anime_name.lower().strip()
-        for item in data:
-            item_title = item.get("title", "").lower().strip()
-            if item_title == ln or item_title.replace(":", "").strip() == ln.replace(":", "").strip():
-                slug = item["href"].replace("/title/", "")
-                return slug
-        # Fall back to first result
-        for item in data:
-            slug = item["href"].replace("/title/", "")
-            return slug
-    except:
-        pass
-    return fallback_slug
-
 class Anime:
-    def __init__(self, title, name=""):
+    def __init__(self, title):
         self.title = title
         self.found = 0
         self.slug = None
-        self.name = name or None
+        self.name = None
         self.eps_data = []
         self.api_name = None
         self.api_san = None
@@ -152,12 +128,11 @@ class Anime:
         raw, _ = extract(html, "const episodesData = [", "];")
 
         # Extract anime name from /e/ page
-        if not self.name:
-            nm = re.search(r'"name":\s*"([^"]+)"', html)
-            if not nm:
-                nm = re.search(r'<title>([^<]+)', html)
-            if nm:
-                self.name = _clean_title(nm.group(1))
+        nm = re.search(r'"name":\s*"([^"]+)"', html)
+        if not nm:
+            nm = re.search(r'<title>([^<]+)', html)
+        if nm:
+            self.name = _clean_title(nm.group(1))
 
         # Always extract name/san/mwsem from /e/ page (needed for video)
         idx = html.find("const name = ")

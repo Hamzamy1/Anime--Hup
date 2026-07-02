@@ -596,7 +596,6 @@ const bv = $('browseView'), bg = $('bg'), bc = $('bc'), bp = $('bp');
 const ev = $('epView'), en = $('ename'), ec1 = $('ec1'), ec2 = $('ec2'), el = $('elist'), epInp = $('epInp');
 const backBtn = $('backBtn'), watchBtn = $('watchBtn'), sec = $('sections');
 const ov = $('player'), ifr = $('ifr'), pt = $('ptitle'), pc = $('pclose');
-const en = $('ename'), ec1 = $('ec1'), ec2 = $('ec2'), el = $('elist'), epInp = $('epInp');
 const srvErr = $('srvErr'), srvErrMsg = $('srvErrMsg'), srvRetry = $('srvRetry');
 
 let slug = null, animeName = '', eps = [], urls = [], timer = null, bPage = 1;
@@ -765,7 +764,7 @@ function pick(s, img, title, tp, yr, rt) {
   window._animeMeta = { image: img || '', title: title || '', type: tp || '', year: yr || '', rating: rt || '' };
   let timedOut = false;
   const ft = setTimeout(() => { timedOut = true; toast('الخادم يستغرق وقتاً طويلاً، جرب تاني'); }, 12000);
-  fetch('/api/episodes', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug:s, name: title || ''}) })
+  fetch('/api/episodes', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug:s}) })
     .then(r=>r.json()).then(d => {
       clearTimeout(ft);
       if (timedOut) return;
@@ -802,7 +801,7 @@ function playEp(ep) {
   ldShow(); srvErr.classList.remove('show');
   let timedOut = false;
   const ft = setTimeout(() => { timedOut = true; toast('جلب الرابط يستغرق وقتاً، جرب تاني'); }, 15000);
-  fetch('/api/play', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug, episode:n, name: animeName || ''}) })
+  fetch('/api/play', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug, episode:n}) })
     .then(r=>r.json()).then(d => {
       clearTimeout(ft);
       if (timedOut) return;

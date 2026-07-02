@@ -212,21 +212,17 @@ def search():
 def episodes():
     data = request.get_json()
     slug = data.get("slug", "").strip()
-    exp_name = data.get("name", "").strip()
     if not slug:
         return jsonify({"found": 0, "message": "No slug provided"})
     try:
-        a = Anime(slug, name=exp_name)
+        a = Anime(slug)
         a.slug = slug
         a.found = 1
         eps = a.get_episodes()
-        name = a.name or ""
-        # Cache by resolved slug
-        resolved_slug = a.slug
         if eps:
-            _eps_cache[resolved_slug] = {"eps": eps, "name": name}
+            _eps_cache[slug] = {"eps": eps, "name": a.name or ""}
             _trim_cache(_eps_cache)
-        return jsonify({"found": 1, "episodes": eps, "name": name, "slug": resolved_slug})
+        return jsonify({"found": 1, "episodes": eps, "name": a.name or "", "slug": slug})
     except Exception as e:
         return jsonify({"found": 0, "message": str(e)[:100]})
 
@@ -234,7 +230,6 @@ def episodes():
 def play():
     data = request.get_json()
     slug = data.get("slug", "").strip()
-    exp_name = data.get("name", "").strip()
     episode = int(data.get("episode", 1))
     if not slug:
         return jsonify({"found": 0, "message": "No slug provided"})
@@ -242,7 +237,7 @@ def play():
     if cache_key in _play_cache:
         return jsonify({"found": 1, "urls": _play_cache[cache_key], "episode": episode})
     try:
-        a = Anime(slug, name=exp_name)
+        a = Anime(slug)
         a.slug = slug
         a.found = 1
         a.load_episode_page()
