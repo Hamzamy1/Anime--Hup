@@ -66,15 +66,15 @@ FALLBACK = [
     {"title":"ون بيس","slug":"one-piece-byw","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-bd6aea763d77a3a6a341a60425f32e5b.jpg","type":"TV","year":"1999"},
     {"title":"هجوم العمالقة","slug":"shingeki-no-kyojin-bzw","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-860185f873a5e284e0c3ba0a4c102f12.jpg","type":"TV","year":"2013"},
     {"title":"جوجوتسو كايسن","slug":"jujutsu-kaisen-cly","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-656701bb048b4df90fbc9d874787014d.jpg","type":"TV","year":"2020"},
-    {"title":"كود جياس","slug":"code-geass-hangyaku-no-lelouch-nn","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-b45ba7f1ea5a330750da48e35d9a884b.jpg","type":"TV","year":"2006"},
+    {"title":"كود جياس","slug":"code-geass-hangyaku-no-lelouch-ro","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-b45ba7f1ea5a330750da48e35d9a884b.jpg","type":"TV","year":"2006"},
     {"title":"المسجل الأسود","slug":"the-black-record-fqn","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-7323094cb72aa748f2418a8e273f1b69.jpg","type":"TV","year":"2025"},
     {"title":"دارلينغ إن ذا فرانكس","slug":"darling-in-the-franxx-sl","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-a4b8e29d5eb77c8532202a58a38c3f4c.jpg","type":"TV","year":"2018"},
-    {"title":"ناروتو شيبودن","slug":"naruto-shippuden-uv","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-d6fc57a680a9fb7277ff2c9a7dead6d1.jpg","type":"TV","year":"2007"},
+    {"title":"ناروتو شيبودن","slug":"naruto-shippuuden-byv","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-d6fc57a680a9fb7277ff2c9a7dead6d1.jpg","type":"TV","year":"2007"},
     {"title":"قاتل الشياطين","slug":"kimetsu-no-yaiba-yuukaku-hen-cuu","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-628d1ca5095917f2f21c5caf3d37655a.jpg","type":"TV","year":"2021"},
     {"title":"ون بانش مان","slug":"one-punch-man-bzz","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-e3c7def532f8b3ea38e49616a8b588dc.jpg","type":"TV","year":"2015"},
     {"title":"بليتش","slug":"bleach-sennen-kessen-hen-cuq","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-5e3a0cb2af11c1abdb6ae2e34852ca19.jpg","type":"TV","year":"2022"},
     {"title":"هانتر × هانتر","slug":"hunter-x-hunter-2011-agk","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-baac3c17c15e329e85b2019ab7e9f9af.jpg","type":"TV","year":"2011"},
-    {"title":"دراغون بول سوبر","slug":"dragon-ball-super-bzj","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-d07a97303a04e13e9a0c3fc096608cfa.jpg","type":"TV","year":"2015"},
+    {"title":"دراغون بول سوبر","slug":"dragon-ball-super-bxw","image":"https://img.anslayer.com/anime/anime/cover-image/anime-cover-d07a97303a04e13e9a0c3fc096608cfa.jpg","type":"TV","year":"2015"},
 ]
 
 @app.route("/api/homepage")
@@ -212,21 +212,21 @@ def search():
 def episodes():
     data = request.get_json()
     slug = data.get("slug", "").strip()
+    exp_name = data.get("name", "").strip()
     if not slug:
         return jsonify({"found": 0, "message": "No slug provided"})
-    if slug in _eps_cache:
-        cached = _eps_cache[slug]
-        return jsonify({"found": 1, "episodes": cached["eps"], "name": cached["name"]})
     try:
-        a = Anime(slug)
+        a = Anime(slug, name=exp_name)
         a.slug = slug
         a.found = 1
         eps = a.get_episodes()
         name = a.name or ""
+        # Cache by resolved slug
+        resolved_slug = a.slug
         if eps:
-            _eps_cache[slug] = {"eps": eps, "name": name}
+            _eps_cache[resolved_slug] = {"eps": eps, "name": name}
             _trim_cache(_eps_cache)
-        return jsonify({"found": 1, "episodes": eps, "name": name})
+        return jsonify({"found": 1, "episodes": eps, "name": name, "slug": resolved_slug})
     except Exception as e:
         return jsonify({"found": 0, "message": str(e)[:100]})
 
@@ -234,6 +234,7 @@ def episodes():
 def play():
     data = request.get_json()
     slug = data.get("slug", "").strip()
+    exp_name = data.get("name", "").strip()
     episode = int(data.get("episode", 1))
     if not slug:
         return jsonify({"found": 0, "message": "No slug provided"})
@@ -241,7 +242,7 @@ def play():
     if cache_key in _play_cache:
         return jsonify({"found": 1, "urls": _play_cache[cache_key], "episode": episode})
     try:
-        a = Anime(slug)
+        a = Anime(slug, name=exp_name)
         a.slug = slug
         a.found = 1
         a.load_episode_page()

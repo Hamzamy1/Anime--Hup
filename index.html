@@ -1028,12 +1028,12 @@ function pick(s, img, title, tp, yr, rt) {
   window._animeMeta = { image: img || '', title: title || '', type: tp || '', year: yr || '', rating: rt || '' };
   let timedOut = false;
   const ft = setTimeout(() => { timedOut = true; toast('الخادم يستغرق وقتاً طويلاً، جرب تاني'); }, 12000);
-  fetch('/api/episodes', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug:s}) })
+  fetch('/api/episodes', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug:s, name: title || ''}) })
     .then(r=>r.json()).then(d => {
       clearTimeout(ft);
       if (timedOut) return;
       ldHide();
-      if (d.found) { eps = d.episodes||[]; animeName = d.name||''; showEps(); }
+      if (d.found) { eps = d.episodes||[]; animeName = d.name||''; if (d.slug) slug = d.slug; showEps(); }
       else toast(d.message||'تعذر التحميل');
     }).catch(() => { clearTimeout(ft); ldHide(); toast('خطأ'); });
 }
@@ -1066,7 +1066,7 @@ function playEp(ep) {
   ldShow(); srvErr.classList.remove('show');
   let timedOut = false;
   const ft = setTimeout(() => { timedOut = true; toast('جلب الرابط يستغرق وقتاً، جرب تاني'); }, 15000);
-  fetch('/api/play', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug, episode:n}) })
+  fetch('/api/play', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug, episode:n, name: animeName || ''}) })
     .then(r=>r.json()).then(d => {
       clearTimeout(ft);
       if (timedOut) return;

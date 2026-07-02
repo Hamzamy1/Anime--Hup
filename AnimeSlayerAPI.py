@@ -35,12 +35,36 @@ def extract(s, start_marker, end_markers, skip=0):
             return None, skip
     return s[start:best_end], best_end + 1
 
+def resolve_slug(anime_name, fallback_slug=None):
+    """Search AnimeSlayer's search API to find the real slug for an anime."""
+    if not anime_name:
+        return fallback_slug
+    try:
+        r = requests.get(f"{DOMAIN}/api/search.php?q={urllib.parse.quote(anime_name)}", headers=HEADERS, timeout=TIMEOUT)
+        data = r.json()
+        if not data:
+            return fallback_slug
+        # Prefer exact match
+        ln = anime_name.lower().strip()
+        for item in data:
+            item_title = item.get("title", "").lower().strip()
+            if item_title == ln or item_title.replace(":", "").strip() == ln.replace(":", "").strip():
+                slug = item["href"].replace("/title/", "")
+                return slug
+        # Fall back to first result
+        for item in data:
+            slug = item["href"].replace("/title/", "")
+            return slug
+    except:
+        pass
+    return fallback_slug
+
 class Anime:
-    def __init__(self, title):
+    def __init__(self, title, name=""):
         self.title = title
         self.found = 0
         self.slug = None
-        self.name = None
+        self.name = name or None
         self.eps_data = []
         self.api_name = None
         self.api_san = None
