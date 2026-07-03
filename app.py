@@ -284,6 +284,33 @@ def browse():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
+@app.route("/api/video-proxy")
+def video_proxy():
+    url = request.args.get("url", "")
+    if not url:
+        return "No URL", 400
+    if "mega.nz" in url:
+        return jsonify({"error": "Cannot proxy mega.nz URLs"}), 400
+    try:
+        headers = {**HEADERS, "Referer": f"{DOMAIN}/", "Origin": DOMAIN}
+        r = requests.get(url, headers=headers, timeout=30, stream=True)
+        if r.status_code != 200:
+            return jsonify({"error": f"Upstream returned {r.status_code}"}), r.status_code
+        ct = r.headers.get("content-type", "video/mp4")
+        cl = r.headers.get("content-length")
+        def gen():
+            for chunk in r.iter_content(chunk_size=65536):
+                if chunk:
+                    yield chunk
+        resp = app.response_class(gen(), mimetype=ct, direct_passthrough=True)
+        if cl:
+            resp.headers["Content-Length"] = cl
+        resp.headers["Accept-Ranges"] = "bytes"
+        resp.headers["Cache-Control"] = "public, max-age=3600"
+        return resp
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))

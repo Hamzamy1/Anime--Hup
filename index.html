@@ -969,22 +969,27 @@ function openS(idx) {
   }
 }
 
+function proxyUrl(url) {
+  if (url.includes('mega.nz') || url.includes('embed')) return url;
+  return '/api/video-proxy?url=' + encodeURIComponent(url);
+}
 function initHls(url) {
+  const pUrl = proxyUrl(url);
   if (url.includes('.m3u8')) {
     if (Hls.isSupported()) {
       var h = new Hls();
-      h.loadSource(url);
+      h.loadSource(pUrl);
       h.attachMedia(vid);
       h.on(Hls.Events.MANIFEST_PARSED, () => { vid.play().catch(()=>{}); });
       vid._hls = h;
     } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
-      vid.src = url;
+      vid.src = pUrl;
       vid.play().catch(()=>{});
     } else {
       toast('المتصفح لا يدعم التشغيل'); autoNextSrv('HLS unsupported');
     }
   } else {
-    vid.src = url;
+    vid.src = pUrl;
     vid.play().catch(()=>{});
   }
 }
