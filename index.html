@@ -945,6 +945,9 @@ function openS(idx) {
   $('pbox').classList.remove('hidden'); $('pbox').classList.add('show');
   
   // Stop current video playback
+  vid.onerror = null; vid.onloadedmetadata = null; vid.ontimeupdate = null;
+  vid.onwaiting = null; vid.onplaying = null; vid.onprogress = null; vid.onended = null;
+  vid.onplay = null; vid.onpause = null;
   vid.pause(); vid.src = ''; vid.removeAttribute('src');
   ifr.style.display = 'none'; ifr.src = '';
   ifr.onload = ifr.onerror = null;
@@ -969,27 +972,22 @@ function openS(idx) {
   }
 }
 
-function proxyUrl(url) {
-  if (url.includes('mega.nz') || url.includes('embed')) return url;
-  return '/api/video-proxy?url=' + encodeURIComponent(url);
-}
 function initHls(url) {
-  const pUrl = proxyUrl(url);
   if (url.includes('.m3u8')) {
     if (Hls.isSupported()) {
       var h = new Hls();
-      h.loadSource(pUrl);
+      h.loadSource(url);
       h.attachMedia(vid);
       h.on(Hls.Events.MANIFEST_PARSED, () => { vid.play().catch(()=>{}); });
       vid._hls = h;
     } else if (vid.canPlayType('application/vnd.apple.mpegurl')) {
-      vid.src = pUrl;
+      vid.src = url;
       vid.play().catch(()=>{});
     } else {
       toast('المتصفح لا يدعم التشغيل'); autoNextSrv('HLS unsupported');
     }
   } else {
-    vid.src = pUrl;
+    vid.src = url;
     vid.play().catch(()=>{});
   }
 }
@@ -1143,6 +1141,9 @@ function autoNextSrv(reason) {
   if (_fakeRetries >= MAX_FAKE_RETRIES) { toast('كل السيرفرات متعطلة'); closeP(); return; }
   _fakeRetries++;
   clearTimeout(timer); clearTimeout(vid._ft1); clearTimeout(vid._ft2);
+  vid.onerror = null; vid.onloadedmetadata = null; vid.ontimeupdate = null;
+  vid.onwaiting = null; vid.onplaying = null; vid.onprogress = null; vid.onended = null;
+  vid.onplay = null; vid.onpause = null;
   vid.pause(); vid.src = ''; vid.removeAttribute('src'); vid._checked = false;
   ifr.src = ''; ifr.style.display = 'none'; ifr.onload = ifr.onerror = null;
   pbar.classList.add('hidden');
@@ -1153,6 +1154,9 @@ function autoNextSrv(reason) {
 pc.addEventListener('click', closeP);
 
 function closeP() {
+  vid.onerror = null; vid.onloadedmetadata = null; vid.ontimeupdate = null;
+  vid.onwaiting = null; vid.onplaying = null; vid.onprogress = null; vid.onended = null;
+  vid.onplay = null; vid.onpause = null;
   vid.pause(); vid.src = ''; vid.removeAttribute('src'); vid._checked = false;
   if (vid._hls) { vid._hls.destroy(); vid._hls = null; }
   ifr.src = ''; ifr.style.display = 'none'; ifr.onload = ifr.onerror = null;
